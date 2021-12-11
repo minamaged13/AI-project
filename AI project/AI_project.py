@@ -54,39 +54,38 @@ print("y_train :", y_train.shape)
 print("y_test :", y_test.shape)
 
 
-def model(x, y, learning_rate, iteration):
-    m = y.size
-    theta = np.zeros((x.shape[1], 1))
-    cost_ = []
+def cost(x,y,theta):
+    m=x.shape[0]
+    prediction=x.dot(theta)
+    error=np.square(np.subtract(prediction,y))
+    
+    j=1/(2*m)* np.sum(error)
+    return j
 
+def gradient_descent(x,y,theta,alpha,iteration):
+    m=x.shape[0]
+    cost_=np.zeros(iteration)
+    
     for i in range(iteration):
-        y_pred = np.dot(x, theta)
-        cost = (1/(2*m))*np.sum(np.square(y_pred-y))
+        prediction=np.dot(x,theta)
+        errors=np.subtract(prediction,y)
+        delta=(alpha/m)*x.T.dot(errors)
+        theta=theta-delta
+        
+        cost_[i]=cost(x,y,theta)
+        if((i%iteration/10)==0):
+            print("Cost :",cost)
+    return theta,cost_
 
-        d_theta = (1/m)*np.dot(x.T, y_pred-y)
-        theta = theta-learning_rate*d_theta
+theta= np.array(np.zeros(7)).reshape((1,7)).T
+iteration=400
+alpha=0.15
 
-        cost_.append(cost)
+theta.shape
 
-        if((i % iteration/10) == 0):
-            print("Cost :", cost)
-
-    return theta, cost_
-
-
-def Gradient_Descent(X, Y, Theta, alpha, num_iters):
-
-    m = Y.shape[0]
-
-    X1 = np.append(np.ones(X.shape), X, axis=1)
-    for i in range(num_iters):
-        h = Predictive_Line(X, Theta.reshape((2, 1)))
-        Theta = Theta - (alpha / m) * ((h - Y).T).dot(X1)
-
-    return Theta
+theta,cost=gradient_descent(x_train,y_train,theta,alpha,iteration)
+print("cost",cost[:40])
 
 
-iteration = 1000
-learning_rate = 0.0000005
-theta, cost_ = model(
-    x_train, y_train, learning_rate=learning_rate, iteration=iteration)
+
+
