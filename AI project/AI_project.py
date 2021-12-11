@@ -9,24 +9,12 @@ df.head()
 df.info()
 df['director'].value_counts()
 df.drop(['id', 'imdb_id', 'original_title', 'homepage', 'tagline', 'director', 'overview',
-        'cast', 'genres', 'production_companies', 'release_year', 'keywords'], axis=1, inplace=True)
-df['release_date'].value_counts()
+        'cast', 'production_companies', 'release_year','release_date', 'keywords','budget','revenue'], axis=1, inplace=True)
+
+df['net_profit'] = df['revenue_adj'] - df['budget_adj']
 
 
-def extract_day(day):
-    return day.split('/')[0]
-
-
-def extract_month(month):
-    return month.split('/')[1]
-
-
-df['Day'] = df['release_date'].apply(extract_day)
-df['Month'] = df['release_date'].apply(extract_month)
-
-df.drop('release_date', axis=1, inplace=True)
-
-x = df.drop(['net_profit', 'revenue_adj', 'budget_adj'], axis=1)
+x = df.drop(['net_profit'], axis=1)
 y = df['net_profit']
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 
