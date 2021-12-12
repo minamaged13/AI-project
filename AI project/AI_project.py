@@ -5,8 +5,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import LabelEncoder
+from sklearn import preprocessing
 
 df = pd.read_csv('tmdb_movies_data.csv')
+
 df.drop(['id', 'imdb_id', 'original_title', 'homepage', 'tagline', 'director', 'overview',
         'cast', 'production_companies', 'release_year', 'release_date', 'keywords', 'budget', 'revenue'], axis=1, inplace=True)
 df['net_profit'] = df['revenue_adj'] - df['budget_adj']
@@ -20,11 +22,11 @@ def Feature_Encoder(X, cols):
         X[c] = lbl.transform(list(X[c].values))
     return X
 
+
 df = Feature_Encoder(df, ['genres'])
 
 
-
-x = df.drop(['net_profit'], axis=1)
+x = df.drop(['net_profit', 'budget_adj'], axis=1)
 y = df['net_profit']
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 
@@ -46,10 +48,45 @@ x_train = np.vstack((np.ones((x_train.shape[0], )), x_train.T)).T
 x_test = np.vstack((np.ones((x_test.shape[0], )), x_test.T)).T
 
 
+# normalize the data
+
+
+def cleanData():
+    global df
+    # remove null values
+    df = df.dropna()
+    # remove duplicates
+    df = df.drop_duplicates()
+
+    # Filter and clean the columns and rows
+    df = df[df['vote_average'] > 0]
+    df = df[df['vote_count'] > 0]
+    df = df[df['popularity'] > 0]
+
+
+def normalize():
+    global df
+    result = df.copy()
+    for feature_name in df.columns:
+        max_value = df[feature_name].max()
+        min_value = df[feature_name].min()
+        result[feature_name] = (
+            df[feature_name] - min_value) / (max_value - min_value)
+    df= result
+
+
+cleanData()
+normalize()
+
+
+# print first 5 rows of the dataframe
+print(df.head())
+
 print("Shape of X_train :", x_train.shape)
 print("Shape of Y_train :", y_train.shape)
 print("Shape of X_test :", x_test.shape)
 print("Shape of Y_test :", y_test.shape)
+
 
 def model(X, Y, learning_rate, iteration):
 
@@ -64,69 +101,54 @@ def model(X, Y, learning_rate, iteration):
         theta = theta - learning_rate*d_theta
         cost_list.append(cost)
         # to print the cost for 10 times
-       # if(i%(iteration/1000) == 0):
-            #print("Cost is :", cost)
+        # if(i%(iteration/1000) == 0):
+        #     print("Cost is :", cost)
     return theta, cost_list
+
 
 iteration = 1000
 learning_rate = 0.000005
-#theta, cost_list = model(x_train, y_train, learning_rate = learning_rate, iteration =iteration)
+# theta, cost_list = model(
+#     x_train, y_train, learning_rate=learning_rate, iteration=iteration)
 
-#rng = np.arange(0, iteration)
-#plt.plot(rng, cost_list)
-#plt.show()
-#y_pred = np.dot(x_test, theta)
-#error = (1/x_test.shape[0])*np.sum(np.abs(y_pred - y_test))
-#print("Test error is :", error*100, "%")
-#print("Test Accuracy is :", (1- error)*100, "%")
+# rng = np.arange(0, iteration)
+# plt.plot(rng, cost_list)
+# plt.show()
+# y_pred = np.dot(x_test, theta)
+# error = (1/x_test.shape[0])*np.sum(np.abs(y_pred - y_test))
 
-
-
-
+# print("Test error is :", error*100, "%")
+# print("Test Accuracy is :", (1 - error)*100, "%")
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#def cost(x,y,theta):
+# def cost(x,y,theta):
 #    m=x.shape[0]
 #    prediction=x.dot(theta)
 #    error=np.square(np.subtract(prediction,y))
-    
+
 #    j=1/(2*m)* np.sum(error)
 #    return j
 
-#def gradient_descent(x,y,theta,alpha,iteration):
+# def gradient_descent(x,y,theta,alpha,iteration):
 #    m=x.shape[0]
 #    cost_=np.zeros(iteration)
-    
+
 #    for i in range(iteration):
 #        prediction=np.dot(x,theta)
 #        errors=np.subtract(prediction,y)
 #        delta=(alpha/m)*x.T.dot(errors)
 #        theta=theta-delta
-        
+
 #        cost_[i]=cost(x,y,theta)
 #        if((i%iteration/10)==0):
 #            print("Cost :",cost)
 #    return theta,cost_
 
 #theta= np.array(np.zeros(7)).reshape((1,7)).T
-#iteration=400
-#alpha=0.15
+# iteration=400
+# alpha=0.15
 
-#theta.shape
+# theta.shape
 
-#theta,cost=gradient_descent(x_train,y_train,theta,alpha,iteration)
-#print("cost",cost[:40])
+# theta,cost=gradient_descent(x_train,y_train,theta,alpha,iteration)
+# print("cost",cost[:40])
