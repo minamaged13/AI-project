@@ -13,44 +13,6 @@ df.drop(['id', 'imdb_id', 'original_title', 'homepage', 'tagline', 'director', '
         'cast', 'production_companies', 'release_year', 'release_date', 'keywords', 'budget', 'revenue'], axis=1, inplace=True)
 df['net_profit'] = df['revenue_adj'] - df['budget_adj']
 
-
-def Feature_Encoder(X, cols):
-    for c in cols:
-        lbl = LabelEncoder()
-        # nationality, club, position (convert them to numbers 0- nclass-1)
-        lbl.fit(list(X[c].values))
-        X[c] = lbl.transform(list(X[c].values))
-    return X
-
-
-df = Feature_Encoder(df, ['genres'])
-
-
-x = df.drop(['net_profit', 'budget_adj'], axis=1)
-y = df['net_profit']
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
-
-scaler = StandardScaler()
-
-scaler.fit(x_train)
-
-x_train = scaler.transform(x_train)
-x_test = scaler.transform(x_test)
-
-
-y_train = np.array(y_train)
-y_train = y_train.reshape(y_train.shape[0], 1)
-
-y_test = np.array(y_test)
-y_test = y_test.reshape(y_test.shape[0], 1)
-
-x_train = np.vstack((np.ones((x_train.shape[0], )), x_train.T)).T
-x_test = np.vstack((np.ones((x_test.shape[0], )), x_test.T)).T
-
-
-# normalize the data
-
-
 def cleanData():
     global df
     # remove null values
@@ -75,17 +37,40 @@ def normalize():
     df= result
 
 
+def Feature_Encoder(X, cols):
+    for c in cols:
+        lbl = LabelEncoder()
+        # nationality, club, position (convert them to numbers 0- nclass-1)
+        lbl.fit(list(X[c].values))
+        X[c] = lbl.transform(list(X[c].values))
+    return X
+
+
+df = Feature_Encoder(df, ['genres'])
 cleanData()
 normalize()
 
+x = df.drop(['net_profit', 'budget_adj'], axis=1)
+y = df['net_profit']
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 
-# print first 5 rows of the dataframe
-print(df.head())
+scaler = StandardScaler()
 
-print("Shape of X_train :", x_train.shape)
-print("Shape of Y_train :", y_train.shape)
-print("Shape of X_test :", x_test.shape)
-print("Shape of Y_test :", y_test.shape)
+scaler.fit(x_train)
+
+x_train = scaler.transform(x_train)
+x_test = scaler.transform(x_test)
+
+
+y_train = np.array(y_train)
+y_train = y_train.reshape(y_train.shape[0], 1)
+
+y_test = np.array(y_test)
+y_test = y_test.reshape(y_test.shape[0], 1)
+
+x_train = np.vstack((np.ones((x_train.shape[0], )), x_train.T)).T
+x_test = np.vstack((np.ones((x_test.shape[0], )), x_test.T)).T
+
 
 
 def model(X, Y, learning_rate, iteration):
@@ -100,55 +85,19 @@ def model(X, Y, learning_rate, iteration):
         d_theta = (1/(m))*np.dot(X.T, y_pred - Y)
         theta = theta - learning_rate*d_theta
         cost_list.append(cost)
-        # to print the cost for 10 times
-        # if(i%(iteration/1000) == 0):
-        #     print("Cost is :", cost)
+       
     return theta, cost_list
 
 
 iteration = 1000
-learning_rate = 0.000005
-# theta, cost_list = model(
-#     x_train, y_train, learning_rate=learning_rate, iteration=iteration)
+learning_rate = 0.00091
+theta, cost_list = model(
+x_train, y_train, learning_rate=learning_rate, iteration=iteration)
+rng = np.arange(0, iteration)
+plt.plot(rng, cost_list)
+#plt.show()
+y_pred = np.dot(x_test, theta)
+error = (1/x_test.shape[0])*np.sum(np.abs(y_pred - y_test))
+print("test error is :", error*100, "%")
+print("test accuracy is :", (1 - error)*100, "%")
 
-# rng = np.arange(0, iteration)
-# plt.plot(rng, cost_list)
-# plt.show()
-# y_pred = np.dot(x_test, theta)
-# error = (1/x_test.shape[0])*np.sum(np.abs(y_pred - y_test))
-
-# print("Test error is :", error*100, "%")
-# print("Test Accuracy is :", (1 - error)*100, "%")
-
-
-# def cost(x,y,theta):
-#    m=x.shape[0]
-#    prediction=x.dot(theta)
-#    error=np.square(np.subtract(prediction,y))
-
-#    j=1/(2*m)* np.sum(error)
-#    return j
-
-# def gradient_descent(x,y,theta,alpha,iteration):
-#    m=x.shape[0]
-#    cost_=np.zeros(iteration)
-
-#    for i in range(iteration):
-#        prediction=np.dot(x,theta)
-#        errors=np.subtract(prediction,y)
-#        delta=(alpha/m)*x.T.dot(errors)
-#        theta=theta-delta
-
-#        cost_[i]=cost(x,y,theta)
-#        if((i%iteration/10)==0):
-#            print("Cost :",cost)
-#    return theta,cost_
-
-#theta= np.array(np.zeros(7)).reshape((1,7)).T
-# iteration=400
-# alpha=0.15
-
-# theta.shape
-
-# theta,cost=gradient_descent(x_train,y_train,theta,alpha,iteration)
-# print("cost",cost[:40])
