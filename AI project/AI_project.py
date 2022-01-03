@@ -1,17 +1,19 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import sklearn as sk
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import LabelEncoder
 from sklearn import preprocessing
+from sklearn import linear_model
 
 df = pd.read_csv('tmdb_movies_data.csv')
-
+df['net_profit'] = df['revenue_adj'] - df['budget_adj']
 df.drop(['id', 'imdb_id', 'original_title', 'homepage', 'tagline', 'director', 'overview',
         'cast', 'production_companies', 'release_year', 'release_date', 'keywords', 'budget', 'revenue'], axis=1, inplace=True)
-df['net_profit'] = df['revenue_adj'] - df['budget_adj']
+
 
 def cleanData():
     global df
@@ -40,7 +42,6 @@ def normalize():
 def Feature_Encoder(X, cols):
     for c in cols:
         lbl = LabelEncoder()
-        # nationality, club, position (convert them to numbers 0- nclass-1)
         lbl.fit(list(X[c].values))
         X[c] = lbl.transform(list(X[c].values))
     return X
@@ -50,8 +51,9 @@ df = Feature_Encoder(df, ['genres'])
 cleanData()
 normalize()
 
-x = df.drop(['net_profit', 'budget_adj'], axis=1)
+x = df.drop(['net_profit'],axis=1)
 y = df['net_profit']
+
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 
 scaler = StandardScaler()
@@ -77,27 +79,26 @@ def model(X, Y, learning_rate, iteration):
 
     m = Y.size
     theta = np.zeros((X.shape[1], 1))
-    cost_list = []
+    cost = 0
     for i in range(iteration):
 
         y_pred = np.dot(X, theta)
         cost = (1/(2*m))*np.sum(np.square(y_pred - Y))
         d_theta = (1/(m))*np.dot(X.T, y_pred - Y)
         theta = theta - learning_rate*d_theta
-        cost_list.append(cost)
+        
        
-    return theta, cost_list
+    return theta, cost
 
-
-iteration = 1000
-learning_rate = 0.00091
-theta, cost_list = model(
-x_train, y_train, learning_rate=learning_rate, iteration=iteration)
-rng = np.arange(0, iteration)
-plt.plot(rng, cost_list)
-#plt.show()
+theta, cost = model(x_train, y_train, learning_rate=0.0008, iteration=1000)
 y_pred = np.dot(x_test, theta)
 error = (1/x_test.shape[0])*np.sum(np.abs(y_pred - y_test))
 print("test error is :", error*100, "%")
 print("test accuracy is :", (1 - error)*100, "%")
+
+print(cost)
+print(theta)
+
+
+
 
